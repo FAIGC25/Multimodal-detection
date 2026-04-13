@@ -17,9 +17,12 @@ from core.interfaces import BaseModality
 from core.entities import VideoContext, DetectionResult
 
 class SIDADepthDetector(BaseModality):
-    def __init__(self, model_path: str = "../SIDA/ck/Clean_SIDA_Depth"):
+    def __init__(self, model_path: str = None):
+        if model_path is None:
+            model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../SIDA/ck/Clean_SIDA_Depth'))
+            
         super().__init__()
-        print("[depth] Инициализация SIDA (Depth) без SAM в 8-bit...")
+        print(f"[depth] Инициализация SIDA (Depth) без SAM в 8-bit. Путь к весам: {model_path}")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -27,12 +30,17 @@ class SIDADepthDetector(BaseModality):
         )
         self.tokenizer.pad_token = self.tokenizer.unk_token
         
+        seg_token_idx = self.tokenizer("[SEG]", add_special_tokens=False).input_ids[0]
+        cls_token_idx = self.tokenizer("[CLS]", add_special_tokens=False).input_ids[0]
+        
         kwargs = {
             "torch_dtype": torch.float16,
             "quantization_config": BitsAndBytesConfig(load_in_8bit=True)
         }
         
-        self.model = SIDAForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+        self.model = SIDAForCausalLM.from_pretrained(
+            model_path, low_cpu_mem_usage=True, seg_token_idx=seg_token_idx, cls_token_idx=cls_token_idx, **kwargs
+        )
         self.model.eval()
         self.clip_image_processor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14")
 
