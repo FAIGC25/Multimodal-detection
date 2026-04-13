@@ -1,0 +1,3 @@
+[submodule "SIDA"]
+	path = SIDA
+	url = https://github.com/hzlsaber/SIDA.git
