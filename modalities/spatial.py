@@ -61,8 +61,10 @@ class SpatialSIDADetector(BaseModality):
         if hasattr(self.model, "get_model") and hasattr(self.model.get_model(), "initialize_vision_modules"):
             try:
                 self.model.get_model().initialize_vision_modules(self.model.get_model().config)
+                # ВАЖНЫЙ ФИКС: Принудительно кастим vision_tower в float16 И переносим на GPU, 
+                # иначе LayerNorm падает, если тензоры остаются на CPU в Half-формате
                 vision_tower = self.model.get_model().get_vision_tower()
-                vision_tower.to(dtype=torch.float16)
+                vision_tower.to(dtype=torch.float16, device=self.device)
             except AttributeError:
                 pass
                 

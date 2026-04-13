@@ -41,6 +41,16 @@ class SIDADepthDetector(BaseModality):
         self.model = SIDAForCausalLM.from_pretrained(
             model_path, low_cpu_mem_usage=True, seg_token_idx=seg_token_idx, cls_token_idx=cls_token_idx, **kwargs
         )
+        
+        if hasattr(self.model, "get_model") and hasattr(self.model.get_model(), "initialize_vision_modules"):
+            try:
+                self.model.get_model().initialize_vision_modules(self.model.get_model().config)
+                # То же самое: переносим vision_tower на GPU в float16, иначе LayerNorm(CPU, Half) падает
+                vision_tower = self.model.get_model().get_vision_tower()
+                vision_tower.to(dtype=torch.float16, device=self.device)
+            except AttributeError:
+                pass
+                
         self.model.eval()
         self.clip_image_processor = CLIPImageProcessor.from_pretrained("openai/clip-vit-large-patch14")
 
