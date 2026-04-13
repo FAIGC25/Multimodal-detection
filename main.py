@@ -4,12 +4,36 @@ import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
+import transformers
+from transformers import AutoConfig, AutoModelForCausalLM
+
+orig_register = AutoConfig.register
+orig_model_register = AutoModelForCausalLM.register
+
+def patched_register(model_type, config_class, exist_ok=False, *args, **kwargs):
+    try:
+        orig_register(model_type, config_class, exist_ok=True, *args, **kwargs)
+    except TypeError:
+        pass
+    except ValueError:
+        pass
+
+def patched_model_register(config_class, model_class, exist_ok=False, *args, **kwargs):
+    try:
+        orig_model_register(config_class, model_class, exist_ok=True, *args, **kwargs)
+    except (TypeError, ValueError):
+        pass
+
+AutoConfig.register = patched_register
+AutoModelForCausalLM.register = patched_model_register
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from data.video_loader import SimpleVideoLoader
 from data.face_tracker import DummyFaceTracker
-from modalities.spatial import SpatialHiddenCLIP
-from modalities.temporal import TemporalAnalyzer
+from modalities.spatial import SpatialSIDADetector
+from modalities.depth import SIDADepthDetector
+# from modalities.temporal import TemporalAnalyzer
 from pipeline.aggregator import WeightedAggregator
 from pipeline.system import MultimodalDeepfakeSystem
 
@@ -18,15 +42,14 @@ def main():
     loader = SimpleVideoLoader()
     tracker = DummyFaceTracker()
     
-    # 2. Регистрируем модальности. Spatial (HiddenCLIP) + Temporal
+    # 2. Регистрируем модальности. Spatial + Depth
     modalities = [
-        SpatialHiddenCLIP(),
-        TemporalAnalyzer(),
+        SpatialSIDADetector(),
+        SIDADepthDetector(),
     ]
     
     # 3. Инициализируем агрегатор.
-    # Веса по умолчанию (0.6 Spatial, 0.4 Temporal)
-    aggregator = WeightedAggregator(weights={"spatial": 0.6, "temporal": 0.4})
+    aggregator = WeightedAggregator(weights={"spatial_sida": 0.5, "sida_depth": 0.5})
     
     # 4. Сборка системы (Оркестратора)
     system = MultimodalDeepfakeSystem(
