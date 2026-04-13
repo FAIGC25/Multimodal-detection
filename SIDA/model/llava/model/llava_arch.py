@@ -105,6 +105,7 @@ class LlavaMetaForCausalLM(ABC):
                 and vision_tower is not None
                 and images is not None
                 and input_ids.shape[1] == 1
+                and attention_mask is not None
             ):
                 attention_mask = torch.ones(
                     (attention_mask.shape[0], past_key_values[-1][-1].shape[-2] + 1),
