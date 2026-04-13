@@ -5,8 +5,8 @@ import torch.nn as nn
 from PIL import Image
 import numpy as np
 
-# Добавляем путь к репозиторию SIDA
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../SIDA')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../SIDA')))
 from transformers import AutoTokenizer, BitsAndBytesConfig, CLIPImageProcessor
 from model.SIDA import SIDAForCausalLM
 from model.llava import conversation as conversation_lib
@@ -17,7 +17,7 @@ from core.interfaces import BaseModality
 from core.entities import VideoContext, DetectionResult
 
 class SIDADepthDetector(BaseModality):
-    def __init__(self, model_path: str = "../../Clean_SIDA_Depth"):
+    def __init__(self, model_path: str = "../SIDA/ck/Clean_SIDA_Depth"):
         super().__init__()
         print("[depth] Инициализация SIDA (Depth) без SAM в 8-bit...")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -6,8 +6,7 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoTokenizer, BitsAndBytesConfig, CLIPImageProcessor
 
-# Добавляем путь к репозиторию SIDA
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../SIDA')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../SIDA')))
 from model.SIDA import SIDAForCausalLM
 from model.llava import conversation as conversation_lib
 from model.llava.mm_utils import tokenizer_image_token
@@ -29,7 +28,7 @@ def preprocess_sam(x, img_size=1024):
     return x
 
 class SpatialSIDADetector(BaseModality):
-    def __init__(self, model_path: str = "../../SIDA/ck/SIDA-13B-description"):
+    def __init__(self, model_path: str = "../SIDA/ck/SIDA-13B-description"):
         super().__init__()
         print("[spatial] Инициализация SIDA (RGB) в 8-bit...")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
