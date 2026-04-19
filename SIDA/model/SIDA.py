@@ -423,7 +423,11 @@ class SIDAForCausalLM(LlavaLlamaForCausalLM):
                 output_hidden_states=True,
                 return_dict_in_generate=True,
             )
-            output_hidden_states = outputs.hidden_states[-1]  # Shape: [batch_size, sequence_length, hidden_size]
+            
+            # Concatenate hidden states from all generation steps (from the last layer)
+            all_hidden_states = [step_states[-1] for step_states in outputs.hidden_states]
+            output_hidden_states = torch.cat(all_hidden_states, dim=1) # Shape: [batch_size, sequence_length, hidden_size]
+            
             output_ids = outputs.sequences  # Generated sequences
 
             # Assume batch_size=1 for simplicity (as seen in chat.py)
