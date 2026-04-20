@@ -139,6 +139,5 @@ class SpatialSIDADetector(BaseModality):
 
         return DetectionResult(
             score=score, 
-            confidence=abs(score - 0.5) * 2,
-            metadata={"reasoning": text_output, "mask_paths": mask_paths, "type": "spatial_sida"}
+            metadata={"reasoning": text_output, "mask_paths": mask_paths, "type": "spatial_sida", "confidence": abs(score - 0.5) * 2}
         )

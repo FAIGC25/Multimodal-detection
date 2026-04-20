@@ -424,9 +424,25 @@ class SIDAForCausalLM(LlavaLlamaForCausalLM):
                 return_dict_in_generate=True,
             )
             
-            # Concatenate hidden states from all generation steps (from the last layer)
+            # The sequence length is sometimes the first dimension (dim 0), 
+            # while the batch size might be dim 1. Let's fix this dynamically.
             all_hidden_states = [step_states[-1] for step_states in outputs.hidden_states]
-            output_hidden_states = torch.cat(all_hidden_states, dim=1) # Shape: [batch_size, sequence_length, hidden_size]
+            
+            # They might be 2D tensors [seq_len, hidden_dimension] if batch_size=1 is squeezed
+            all_hidden_states_3d = []
+            for h in all_hidden_states:
+                if h.dim() == 2:
+                    all_hidden_states_3d.append(h.unsqueeze(0)) # Make it [1, seq_len, hidden_dim]
+                else:
+                    all_hidden_states_3d.append(h)
+
+            try:
+                # Concatenate along the sequence length dimension (dim 1)
+                output_hidden_states = torch.cat(all_hidden_states_3d, dim=1) # Shape: [batch_size, total_seq_len, hidden_dim]
+            except Exception as e:
+                for i, h in enumerate(all_hidden_states_3d):
+                    print(f"step {i} hidden_states_3d shape: {h.shape}")
+                raise e
             
             output_ids = outputs.sequences  # Generated sequences
 
