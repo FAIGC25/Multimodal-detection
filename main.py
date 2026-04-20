@@ -1,6 +1,7 @@
 import os
 import sys
 import ssl
+import time
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -61,8 +62,8 @@ def main():
     
     # --- Запуск ---
     video_path = "path/to/your/video.mp4"
-    # Если есть уже сгенерированное видео с глубиной, укажите путь к нему:
-    depth_video_path = "path/to/your/depth_video.mp4" # Или передайте None, если хотите генерировать на лету
+
+    depth_video_path = "path/to/your/depth_video.mp4" 
     
     print(f"\nЗапуск пайплайна Multimodal Deepfake Detection для видео: {video_path}\n")
     
@@ -70,9 +71,16 @@ def main():
         print(f"Ошибка: Видео файл не найден по пути: {video_path}")
         return
 
+    print("\n--- Начало инференса ---")
+    start_time = time.perf_counter()
+    
     # Передаем карту глубины в систему
     result = system.predict(video_path, depth_video_path=depth_video_path if os.path.exists(depth_video_path) else None)
     
+    end_time = time.perf_counter()
+    inference_time = end_time - start_time
+    print(f"--- Конец инференса. Время выполнения: {inference_time:.2f} секунд ---")
+
     print("\n=== Итоговый результат ===")
     print(f"Вероятность фейка (Score): {result.score:.4f}")
     print(f"Метаданные (Metadata):     {result.metadata}")

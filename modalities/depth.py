@@ -84,7 +84,10 @@ class SIDADepthDetector(BaseModality):
         conv.append_message(conv.roles[0], prompt)
         conv.append_message(conv.roles[1], "")
         
-        input_ids = tokenizer_image_token(conv.get_prompt(), self.tokenizer, return_tensors="pt").unsqueeze(0).to(self.device)
+        full_prompt = conv.get_prompt()
+        print(f"\n[depth] Сгенерированный промпт модели SIDA:\n{'-'*40}\n{full_prompt}\n{'-'*40}\n")
+        
+        input_ids = tokenizer_image_token(full_prompt, self.tokenizer, return_tensors="pt").unsqueeze(0).to(self.device)
 
         return {"image_clip": image_clip, "input_ids": input_ids, "conv": conv}
 
