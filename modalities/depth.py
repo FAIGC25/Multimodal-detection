@@ -80,7 +80,7 @@ class SIDADepthDetector(BaseModality):
         prompt = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + "\n"
         prompt += "Analyze this depth map. Is it a deepfake?"
         
-        conv = conversation_lib.default_conversation.copy()
+        conv = conversation_lib.conv_templates["llava_v1"].copy()
         conv.append_message(conv.roles[0], prompt)
         conv.append_message(conv.roles[1], "")
         
@@ -89,18 +89,22 @@ class SIDADepthDetector(BaseModality):
         return {"image_clip": image_clip, "input_ids": input_ids, "conv": conv}
 
     def forward(self, preprocessed_data: dict) -> dict:
-        stop_str = preprocessed_data["conv"].sep2
-        keywords = [stop_str]
-        stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, preprocessed_data["input_ids"])
+        stop_str = preprocessed_data["conv"].sep if preprocessed_data["conv"].sep else preprocessed_data["conv"].sep2
+        keywords = [stop_str] if stop_str else []
+        
+        generate_kwargs = {
+            "inputs": preprocessed_data["input_ids"],
+            "images": preprocessed_data["image_clip"],
+            "max_new_tokens": 512,
+            "use_cache": True,
+        }
+        
+        if keywords:
+            stopping_criteria = KeywordsStoppingCriteria(keywords, self.tokenizer, preprocessed_data["input_ids"])
+            generate_kwargs["stopping_criteria"] = [stopping_criteria]
 
         with torch.no_grad():
-            output_ids = self.model.generate(
-                inputs=preprocessed_data["input_ids"],
-                images=preprocessed_data["image_clip"],
-                max_new_tokens=512,
-                use_cache=True,
-                stopping_criteria=[stopping_criteria]
-            )
+            output_ids = self.model.generate(**generate_kwargs)
         return {"output_ids": output_ids}
 
     def postprocess(self, raw_output: dict) -> DetectionResult:
