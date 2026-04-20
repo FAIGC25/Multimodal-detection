@@ -111,6 +111,5 @@ class SIDADepthDetector(BaseModality):
         
         return DetectionResult(
             score=score, 
-            confidence=abs(score - 0.5) * 2,
-            metadata={"reasoning": text_output, "type": "sida_depth"}
+            metadata={"reasoning": text_output, "type": "sida_depth", "confidence": abs(score - 0.5) * 2}
         )

@@ -16,6 +16,7 @@ class VideoContext:
     raw_frames: torch.Tensor  # (T, C, H, W) полный кадр
     fps: float
     face_tracks: List[FaceTrack] = field(default_factory=list)
+    depth_maps: List[Any] = field(default_factory=list)
 
 @dataclass
 class DetectionResult:
