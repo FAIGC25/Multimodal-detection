@@ -70,8 +70,9 @@ class SIDADepthDetector(BaseModality):
             depth_map = np.squeeze(depth_map, axis=0) # (H, W)
         elif len(depth_map.shape) == 3 and depth_map.shape[-1] == 1:
             depth_map = np.squeeze(depth_map, axis=-1) # (H, W)
-
+        
         depth_map = (depth_map * 255).astype(np.uint8) if depth_map.max() <= 1.0 else depth_map.astype(np.uint8)
+
         image_rgb = Image.fromarray(depth_map).convert('RGB')
 
         image_clip = self.clip_image_processor.preprocess(image_rgb, return_tensors="pt")["pixel_values"][0].unsqueeze(0).half().to(self.device)

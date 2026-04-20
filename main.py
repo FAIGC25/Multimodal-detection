@@ -61,13 +61,17 @@ def main():
     
     # --- Запуск ---
     video_path = "path/to/your/video.mp4"
+    # Если есть уже сгенерированное видео с глубиной, укажите путь к нему:
+    depth_video_path = "path/to/your/depth_video.mp4" # Или передайте None, если хотите генерировать на лету
+    
     print(f"\nЗапуск пайплайна Multimodal Deepfake Detection для видео: {video_path}\n")
     
     if not os.path.exists(video_path):
         print(f"Ошибка: Видео файл не найден по пути: {video_path}")
         return
 
-    result = system.predict(video_path)
+    # Передаем карту глубины в систему
+    result = system.predict(video_path, depth_video_path=depth_video_path if os.path.exists(depth_video_path) else None)
     
     print("\n=== Итоговый результат ===")
     print(f"Вероятность фейка (Score): {result.score:.4f}")
