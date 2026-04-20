@@ -112,7 +112,8 @@ class SIDADepthDetector(BaseModality):
 
     def postprocess(self, raw_output: dict) -> DetectionResult:
         output_ids = raw_output["output_ids"][0]
-        output_ids = output_ids[output_ids != IMAGE_TOKEN_INDEX]
+        # Отфильтруем абсолютно все отрицательные токены (включая IMAGE_TOKEN_INDEX = -200, и возможные -1 или -100)
+        output_ids = output_ids[output_ids >= 0]
         
         text_output = self.tokenizer.decode(output_ids, skip_special_tokens=True).strip()
         
