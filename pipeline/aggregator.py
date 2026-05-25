@@ -5,7 +5,7 @@ from core.entities import DetectionResult
 class WeightedAggregator(BaseAggregator):
     def __init__(self, weights: Dict[str, float] = None):
         # По умолчанию веса равны (заглушка на будущее)
-        self.weights = weights or {"spatial": 0.5, "temporal": 0.5}
+        self.weights = weights or {"spatial": 0.8, "temporal": 0.2}
 
     def aggregate(self, results: Dict[str, DetectionResult]) -> DetectionResult:
         print("[Aggregator] Агрегация результатов со всех модальностей...")
