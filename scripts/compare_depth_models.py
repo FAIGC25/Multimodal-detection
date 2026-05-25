@@ -246,6 +246,7 @@ class ModelComparator:
 
     def save_results(self, metrics, output_path):
         """Save metrics to JSON file"""
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
         with open(output_path, 'w') as f:
             json.dump(metrics, f, indent=2)
         print(f"Results saved to {output_path}")

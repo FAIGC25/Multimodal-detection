@@ -42,17 +42,16 @@ class DepthStudentDetector(BaseModality):
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Load EfficientNet-B0 backbone
-        self.model = efficientnet_b0(weights=None)  # No ImageNet pretraining
+        # Recreate the same DepthStudent architecture used during training
+        # (weights saved as model.state_dict() where model has self.backbone = efficientnet_b0(...))
+        self.backbone = efficientnet_b0(weights=None)
+        in_features = self.backbone.classifier[1].in_features
+        self.backbone.classifier[1] = nn.Linear(in_features, 3)
 
-        # Replace classifier for 3-class classification
-        in_features = self.model.classifier[1].in_features
-        self.model.classifier[1] = nn.Linear(in_features, 3)  # [Real, Full Synthetic, Tampered]
-
-        # Load distilled weights
+        # Load distilled weights (keys match: backbone.features.*, backbone.classifier.*)
         try:
             state_dict = torch.load(model_path, map_location=self.device)
-            self.model.load_state_dict(state_dict)
+            self.load_state_dict(state_dict)
             print(f"[depth_student] Веса загружены успешно")
         except Exception as e:
             raise RuntimeError(f"Failed to load model weights from {model_path}: {e}")
@@ -109,7 +108,7 @@ class DepthStudentDetector(BaseModality):
 
     def forward(self, preprocessed_data: dict) -> dict:
         with torch.no_grad():
-            logits = self.model(preprocessed_data["image"])
+            logits = self.backbone(preprocessed_data["image"])
 
         print(f"[depth_student] Инференс: logits shape={logits.shape}, values={logits}")
 
