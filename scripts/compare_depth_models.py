@@ -108,6 +108,7 @@ class ModelComparator:
             preprocessed = model.preprocess(context)
             raw_output = model.forward(preprocessed)
             result = model.postprocess(raw_output)
+            print(f"    Текст модели: {result.metadata.get('reasoning', '')[:150]}")
             end_time = time.time()
 
             latency = (end_time - start_time) * 1000  # ms
