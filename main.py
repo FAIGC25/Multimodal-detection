@@ -2,6 +2,7 @@ import os
 import sys
 import ssl
 import time
+import argparse
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -33,25 +34,36 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from data.video_loader import SimpleVideoLoader
 from data.face_tracker import DummyFaceTracker
 from modalities.spatial import SpatialSIDADetector
-from modalities.depth import SIDADepthDetector
-# from modalities.temporal import TemporalAnalyzer
+from modalities.depth_student import DepthStudentDetector
 from pipeline.aggregator import WeightedAggregator
 from pipeline.system import MultimodalDeepfakeSystem
 
 def main():
+    parser = argparse.ArgumentParser(description="Multimodal Deepfake Detection")
+    parser.add_argument("--video", required=True, help="Path to input video")
+    parser.add_argument("--depth", default=None, help="Path to depth video")
+    args = parser.parse_args()
+
+    video_path = args.video
+    depth_video_path = args.depth
+
+    if not os.path.exists(video_path):
+        print(f"Ошибка: Видео файл не найден по пути: {video_path}")
+        return
+
     # 1. Инициализация компонентов инфраструктуры
     loader = SimpleVideoLoader()
     tracker = DummyFaceTracker()
-    
-    # 2. Регистрируем модальности. Spatial + Depth
+
+    # 2. Регистрируем модальности. Spatial + Depth (student)
     modalities = [
         SpatialSIDADetector(),
-        SIDADepthDetector(),
+        DepthStudentDetector(),
     ]
-    
+
     # 3. Инициализируем агрегатор.
-    aggregator = WeightedAggregator(weights={"spatial_sida": 0.5, "sida_depth": 0.5})
-    
+    aggregator = WeightedAggregator(weights={"spatial_sida": 0.5, "depth_student": 0.5})
+
     # 4. Сборка системы (Оркестратора)
     system = MultimodalDeepfakeSystem(
         video_loader=loader,
@@ -59,24 +71,14 @@ def main():
         modalities=modalities,
         aggregator=aggregator
     )
-    
-    # --- Запуск ---
-    video_path = "path/to/your/video.mp4"
 
-    depth_video_path = "path/to/your/depth_video.mp4" 
-    
     print(f"\nЗапуск пайплайна Multimodal Deepfake Detection для видео: {video_path}\n")
-    
-    if not os.path.exists(video_path):
-        print(f"Ошибка: Видео файл не найден по пути: {video_path}")
-        return
 
     print("\n--- Начало инференса ---")
     start_time = time.perf_counter()
-    
-    # Передаем карту глубины в систему
-    result = system.predict(video_path, depth_video_path=depth_video_path if os.path.exists(depth_video_path) else None)
-    
+
+    result = system.predict(video_path, depth_video_path=depth_video_path)
+
     end_time = time.perf_counter()
     inference_time = end_time - start_time
     print(f"--- Конец инференса. Время выполнения: {inference_time:.2f} секунд ---")
