@@ -12,7 +12,11 @@ from .llava.model.language_model.llava_llama import (LlavaLlamaForCausalLM,
 
 from .segment_anything import build_sam_vit_h
 
-from torchviz import make_dot
+try:
+    from torchviz import make_dot
+except ImportError:
+    make_dot = None
+
 import itertools
 
 import deepspeed
