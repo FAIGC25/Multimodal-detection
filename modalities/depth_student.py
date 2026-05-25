@@ -56,8 +56,8 @@ class DepthStudentDetector(BaseModality):
         except Exception as e:
             raise RuntimeError(f"Failed to load model weights from {model_path}: {e}")
 
-        self.model.to(self.device)
-        self.model.eval()
+        self.backbone.to(self.device)
+        self.backbone.eval()
 
         # Standard ImageNet normalization
         self.transform = transforms.Compose([
