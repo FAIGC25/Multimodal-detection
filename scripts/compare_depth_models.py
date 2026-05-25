@@ -69,21 +69,27 @@ class ModelComparator:
         # Categories: real, fake (with subdirs like background_aug, dlc, etc.)
         test_files = []
 
+        half = self.num_samples // 2 if self.num_samples else 1000
+
         # Real videos
         real_dir = dataset_path / "real"
+        real_files = []
         if real_dir.exists():
-            for video_file in sorted(real_dir.glob("*.mp4"))[:self.num_samples or 1000]:
-                test_files.append((str(video_file), "real"))
+            for video_file in sorted(real_dir.glob("*.mp4"))[:half]:
+                real_files.append((str(video_file), "real"))
 
-        # Fake videos (depth maps are same format, just labeled differently)
+        # Fake videos (collect from all subdirs, then trim)
         fake_dir = dataset_path / "fake"
+        fake_files = []
         if fake_dir.exists():
             for subdir in sorted(fake_dir.iterdir()):
                 if subdir.is_dir():
-                    for video_file in sorted(subdir.glob("*.mp4"))[:self.num_samples or 1000]:
-                        test_files.append((str(video_file), "fake"))
+                    for video_file in sorted(subdir.glob("*.mp4")):
+                        fake_files.append((str(video_file), "fake"))
+        fake_files = fake_files[:half]
 
-        print(f"\nLoaded {len(test_files)} test files")
+        test_files = real_files + fake_files
+        print(f"\nLoaded {len(test_files)} test files ({len(real_files)} real, {len(fake_files)} fake)")
         if self.num_samples:
             test_files = test_files[:self.num_samples]
 

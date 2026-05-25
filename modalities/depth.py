@@ -116,11 +116,15 @@ class SIDADepthDetector(BaseModality):
         output_ids = output_ids[output_ids >= 0]
         
         text_output = self.tokenizer.decode(output_ids, skip_special_tokens=True).strip()
-        
-        is_fake = "tampered" in text_output.lower() or "fake" in text_output.lower()
+
+        # Extract only the model's response after "ASSISTANT:" to avoid
+        # matching "fake" inside the prompt text "Is it a deepfake?"
+        response = text_output.split("ASSISTANT:")[-1].strip() if "ASSISTANT:" in text_output else text_output
+
+        is_fake = "tampered" in response.lower() or "fake" in response.lower()
         score = 0.95 if is_fake else 0.05
         
         return DetectionResult(
-            score=score, 
-            metadata={"reasoning": text_output, "type": "sida_depth", "confidence": abs(score - 0.5) * 2}
+            score=score,
+            metadata={"reasoning": response, "type": "sida_depth", "confidence": abs(score - 0.5) * 2}
         )
