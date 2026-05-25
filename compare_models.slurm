@@ -3,8 +3,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem=40G
 #SBATCH --time=03:00:00
-#SBATCH --output=logs/compare_models_%j.log
-#SBATCH --error=logs/compare_models_%j.err
+#SBATCH --output=/mnt/tank/scratch/dstoronkin/Multimodal-detection/logs/compare_models_%j.log
+#SBATCH --error=/mnt/tank/scratch/dstoronkin/Multimodal-detection/logs/compare_models_%j.err
 
 # Compare SIDA Depth vs EfficientNet-B0 Student models
 
@@ -12,11 +12,11 @@ echo "Starting model comparison on $(date)"
 echo "GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader)"
 echo "================================"
 
-# Create logs directory
-mkdir -p logs
-
 # Navigate to project directory
-cd /mnt/tank/scratch/dstoronkin/MultimodalDetection || exit
+cd /mnt/tank/scratch/dstoronkin/Multimodal-detection || exit
+
+# Create logs and results directories
+mkdir -p logs results
 
 # Make sure we're on dev branch
 git fetch origin
